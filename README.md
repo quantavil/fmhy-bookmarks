@@ -90,7 +90,7 @@ Create or edit `personal.md` in the project root:
 * [Hugging Face](https://huggingface.co/)
 ```
 
-`personal.md` is automatically detected and loaded into the top-level `Personal` folder. To specify a custom file or disable personal bookmarks:
+`personal.md` is automatically detected and loaded into the top-level `Personal` folder. If `personal.md` contains no headings, bookmarks are placed directly under `Personal` as a flat list. To specify a custom file or disable personal bookmarks:
 
 ```bash
 uv run convert_fmhy_bookmarks.py --personal my-links.md

@@ -16,7 +16,7 @@
 - Unparented auxiliary links on lines without prefix text emitted 26 bare bookmarks named `"Discord"` or `"Telegram"`. Fixed by qualifying with `base_title`.
 - Markdown formatting inside link brackets (`[**Tool**](...)`) broke string replacement in `group_title`. Fixed by stripping links via regex `re.sub(r"\[.*?\]\(.*?\)", "", prefix)`.
 - URL-safe base64 strings containing `-` and `_` raised `binascii.Error` in `decode_base64_destination`. Fixed by normalizing with `candidate.translate(str.maketrans("-_", "+/"))`.
-- Hardcoded `len(starts) == len(single_page_specs)` crashed if upstream added/renamed a page. Fixed by dynamically parsing `# Heading` from each document chunk.
+- Dynamically parsing first `# Heading` in single-page chunks misnamed `non-english.md` as `Arabic / العربية` and `storage.md` as `Page 18`. Fixed by matching chunks to `SINGLE_PAGE_SPECS`.
 
 ## Non-Obvious Discoveries
 - System has `uv` installed, but lacks `pip`; `requirements.txt` was deleted to prevent dual-manifest drift.

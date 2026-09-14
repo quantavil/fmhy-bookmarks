@@ -11,7 +11,7 @@ The generated HTML was checked against the live single-page Markdown, the offici
 ## Generated output
 
 1. 24 direct FMHY top-level folders (plus `Personal` = 25)
-2. 210 FMHY second-level folders (plus the Personal section = 211)
+2. 226 FMHY second-level folders (plus the Personal section = 227)
 3. 4,367 FMHY bookmarks (plus 194 personal = 4,561)
 4. 677 links in the complete NSFW catalogue
 5. 22 Base64 gateway occurrences resolved into 25 direct destinations

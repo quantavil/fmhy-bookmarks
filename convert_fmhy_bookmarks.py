@@ -66,6 +66,10 @@ PAGE_MAP = {
 }
 PAGE_SPECS = tuple(PageSpec(fn, title) for fn, title in PAGE_MAP.items())
 PAGE_BY_FILENAME = {spec.filename: spec for spec in PAGE_SPECS}
+SINGLE_PAGE_SPECS = tuple(
+    spec for spec in PAGE_SPECS
+    if spec.filename not in {"beginners-guide.md", "unsafe.md"}
+)
 
 DOCUMENT_START_RE = re.compile(
     r"(?m)(?=^\*\*\*\s*$\n^\*\*\*\s*$\n"
@@ -142,6 +146,8 @@ def documents_from_markdown(text: str, source_name: str) -> list[tuple[PageSpec,
             text[starts[i] : starts[i + 1] if i + 1 < len(starts) else None]
             for i in range(len(starts))
         ]
+        if len(chunks) == len(SINGLE_PAGE_SPECS):
+            return list(zip(SINGLE_PAGE_SPECS, chunks, strict=True))
         specs_by_title = {spec.title.casefold(): spec for spec in PAGE_SPECS}
         result: list[tuple[PageSpec, str]] = []
         for i, chunk in enumerate(chunks):
@@ -382,7 +388,7 @@ def split_description(text: str) -> tuple[str, str]:
     return text, ""
 
 
-def group_title(prefix: str, links: Iterable[Link] | None = None) -> str:
+def group_title(prefix: str) -> str:
     without_links = re.sub(r"\[.*?\]\(.*?\)", "", prefix)
     title = clean_label(without_links).strip(" ,/|:-")
     return "" if title.casefold() in CONNECTOR_WORDS else title
@@ -462,7 +468,9 @@ def build_tree(
 ) -> BookmarkTree:
     tree: BookmarkTree = {}
     for spec, markdown in documents:
-        if sections := _parse_sections(markdown, 1, False, include_auxiliary):
+        has_l1 = any(re.match(r"^#\s+", line) for line in markdown.splitlines())
+        min_level = 1 if has_l1 else 2
+        if sections := _parse_sections(markdown, min_level, False, include_auxiliary):
             tree[spec.title] = sections
     return tree
 
@@ -512,15 +520,22 @@ def render_bookmarks(tree: BookmarkTree) -> str:
     for page, sections in tree.items():
         lines.append(f"    <DT><H3>{html.escape(page)}</H3>")
         lines.append("    <DL><p>")
-        for section, links in sections.items():
-            lines.append(f"        <DT><H3>{html.escape(section)}</H3>")
-            lines.append("        <DL><p>")
-            for link in links:
+        if list(sections.keys()) == ["General"]:
+            for link in sections["General"]:
                 lines.append(
-                    f'            <DT><A HREF="{html.escape(link.url, quote=True)}">'
+                    f'        <DT><A HREF="{html.escape(link.url, quote=True)}">'
                     f"{html.escape(link.title)}</A>"
                 )
-            lines.append("        </DL><p>")
+        else:
+            for section, links in sections.items():
+                lines.append(f"        <DT><H3>{html.escape(section)}</H3>")
+                lines.append("        <DL><p>")
+                for link in links:
+                    lines.append(
+                        f'            <DT><A HREF="{html.escape(link.url, quote=True)}">'
+                        f"{html.escape(link.title)}</A>"
+                    )
+                lines.append("        </DL><p>")
         lines.append("    </DL><p>")
     lines.append("</DL><p>")
     return "\n".join(lines) + "\n"

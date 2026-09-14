@@ -24,6 +24,7 @@ from convert_fmhy_bookmarks import (  # noqa: E402
     parse_bookmark_spec,
     render_bookmarks,
     resolve_base64_gateways,
+    SINGLE_PAGE_SPECS,
 )
 
 
@@ -230,6 +231,27 @@ class TreeTests(unittest.TestCase):
         personal_pos = html.find("<DT><H3>Personal</H3>")
         fmhy_pos = html.find("<DT><H3>FMHY Category</H3>")
         self.assertTrue(0 < personal_pos < fmhy_pos)
+
+    def test_headless_personal_bookmarks_rendered_flat(self) -> None:
+        personal = {"General": [Link("Tool", "https://example.com/")]}
+        tree = {"Personal": personal}
+        html = render_bookmarks(tree)
+        self.assertIn("<DT><H3>Personal</H3>", html)
+        self.assertNotIn("<DT><H3>General</H3>", html)
+        self.assertIn('<DT><A HREF="https://example.com/">Tool</A>', html)
+
+    def test_level2_fallback_when_no_level1_headings(self) -> None:
+        source = "## Mockups\n* ⭐ [Shots](https://shots.so/)"
+        tree = build_tree([(PageSpec("storage.md", "Storage"), source)])
+        self.assertEqual(list(tree["Storage"]), ["Mockups"])
+        self.assertEqual(len(tree["Storage"]["Mockups"]), 1)
+
+    def test_single_page_specs_matching_when_exact_count(self) -> None:
+        chunk = "***\n***\n**[◄◄ Back to Wiki Index](https://fmhy.net/)**\n\n# Header\n* ⭐ [Link](https://a.com)\n"
+        markdown = chunk * len(SINGLE_PAGE_SPECS)
+        docs = documents_from_markdown(markdown, "single-page.md")
+        self.assertEqual(len(docs), len(SINGLE_PAGE_SPECS))
+        self.assertEqual([d[0] for d in docs], list(SINGLE_PAGE_SPECS))
 
 
 if __name__ == "__main__":
